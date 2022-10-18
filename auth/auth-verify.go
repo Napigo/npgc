@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Napigo/npglogger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/kataras/jwt"
 )
@@ -36,7 +35,6 @@ func AuthVerify(app *fiber.App) {
 // Util function to extact the claim "subject" from
 // the jwt token string value
 func _getSubFromToken(tokenString string) (string, error) {
-	npglogger.Info("getSubFromToken" + tokenString)
 	byteToken := []byte(tokenString)
 
 	secret := os.Getenv("JWT_SECRETS")
