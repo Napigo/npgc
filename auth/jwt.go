@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"os"
 	"time"
 
@@ -15,18 +16,15 @@ type JWTHeader struct {
 	Alg string `json:"alg"`
 }
 
-type JWTToken struct {
+type JWTBuilder struct {
 	Expiry   int64
 	IssuedAt int64
 	Issuer   string
 	Subject  string
-	Kid      string
-	Typ      string
-	Alg      string
 	Secret   []byte
 }
 
-func (jt JWTToken) CreateJWT() (*string, error) {
+func (jt JWTBuilder) CreateJWT() (*string, error) {
 	standardClaims := jwt.Claims{
 		Expiry:   jt.Expiry,
 		IssuedAt: jt.IssuedAt,
@@ -46,4 +44,24 @@ func (jt JWTToken) CreateJWT() (*string, error) {
 
 	stringToken := string(token)
 	return &stringToken, nil
+}
+
+func GetSubFromToken(tokenString string) (string, error) {
+	byteToken := []byte(tokenString)
+
+	secret := []byte(os.Getenv("JWT_SECRETS"))
+
+	if len(secret) == 0 {
+		return "", errors.New("jwt secrets not found")
+	}
+
+	verifiedToken, err := jwt.VerifyWithHeaderValidator(jwt.HS256, secret, byteToken, func(alg string, headerDecoded []byte) (jwt.Alg, jwt.PublicKey, jwt.InjectFunc, error) {
+		return jwt.HS256, secret, nil, nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	sub := verifiedToken.StandardClaims.Subject
+	return sub, nil
 }
