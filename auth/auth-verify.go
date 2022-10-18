@@ -1,7 +1,9 @@
-package rest
+package auth
 
 import (
 	"context"
+	"errors"
+	"os"
 	"strings"
 
 	"github.com/Napigo/npglogger"
@@ -9,15 +11,7 @@ import (
 	"github.com/kataras/jwt"
 )
 
-type userSubKey int
-
-var (
-	UserSubKey userSubKey
-	JWTSecret  = []byte("NAPIGO-JWT-SECRET")
-)
-
-// Deprecated: should use AuthVerify instead, to verify and get the user_id from token
-func UserSubMiddleware(app *fiber.App) {
+func AuthVerify(app *fiber.App) {
 	app.Use(func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
 
@@ -27,7 +21,7 @@ func UserSubMiddleware(app *fiber.App) {
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
-		sub, err := getSubFromToken(tokenString)
+		sub, err := _getSubFromToken(tokenString)
 		if err != nil {
 			fiber.NewError(fiber.StatusUnauthorized)
 		}
@@ -39,16 +33,23 @@ func UserSubMiddleware(app *fiber.App) {
 	})
 }
 
-// Deprecated: should use AuthVerify instead, to verify and get the user_id from token
-func getSubFromToken(tokenString string) (string, error) {
+// Util function to extact the claim "subject" from
+// the jwt token string value
+func _getSubFromToken(tokenString string) (string, error) {
 	npglogger.Info("getSubFromToken" + tokenString)
 	byteToken := []byte(tokenString)
 
-	verifiedToken, err := jwt.VerifyWithHeaderValidator(jwt.HS256, JWTSecret, byteToken, func(alg string, headerDecoded []byte) (jwt.Alg, jwt.PublicKey, jwt.InjectFunc, error) {
-		return jwt.HS256, JWTSecret, nil, nil
+	secret := os.Getenv("JWT_SECRETS")
+
+	if len(secret) == 0 {
+		return "", errors.New("jwt secrets not found")
+	}
+
+	verifiedToken, err := jwt.VerifyWithHeaderValidator(jwt.HS256, secret, byteToken, func(alg string, headerDecoded []byte) (jwt.Alg, jwt.PublicKey, jwt.InjectFunc, error) {
+		return jwt.HS256, secret, nil, nil
 	})
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	sub := verifiedToken.StandardClaims.Subject
