@@ -1,4 +1,4 @@
-package rest
+package npgc
 
 import (
 	"github.com/Napigo/npglogger"

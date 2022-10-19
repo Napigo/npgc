@@ -1,11 +1,11 @@
-package auth_test
+package npgc_test
 
 import (
 	"os"
 	"testing"
 	"time"
 
-	"github.com/Napigo/npgcommon/auth"
+	npgc "github.com/Napigo/npgc"
 )
 
 type TPayload struct {
@@ -30,7 +30,7 @@ func Test_GetSubFromToken(t *testing.T) {
 		Result: "Standard-A",
 	}
 
-	jToken := auth.JWTBuilder{
+	jToken := npgc.JWTBuilder{
 		Expiry:   now.Add(15 * time.Minute).Unix(),
 		IssuedAt: now.Unix(),
 		Issuer:   os.Getenv("JWT_ISSUER"),
@@ -44,7 +44,7 @@ func Test_GetSubFromToken(t *testing.T) {
 	}
 	sToken := *token
 
-	sub, err := auth.GetSubFromToken(sToken)
+	sub, err := npgc.GetSubFromToken(sToken)
 	if err != nil {
 		t.Error("Failed to extract subject ...GetSubFromToken() ")
 	}

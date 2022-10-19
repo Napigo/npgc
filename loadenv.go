@@ -1,4 +1,4 @@
-package npgcommon
+package npgc
 
 import (
 	"log"

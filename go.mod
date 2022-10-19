@@ -1,4 +1,4 @@
-module github.com/Napigo/npgcommon
+module github.com/Napigo/npgc
 
 go 1.19
 
